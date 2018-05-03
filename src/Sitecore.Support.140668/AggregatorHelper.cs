@@ -40,16 +40,18 @@ namespace Sitecore.Support.ContentSearch.Analytics.Aggregators
       {
         using (var context = ContentSearchManager.GetAnalyticsIndex().CreateSearchContext())
         {
-          var addressesQuery = context.GetQueryable<IndexedAddress>().Where(address => address.ContactId == contact.Id.ToGuid());
+          #region Fix for 140668
+          var addressesQuery = context.GetQueryable<IndexedAddress>().Where(address => address.ContactId == contact.Id.ToGuid()); //avoid retrieval here
 
-          var count = addressesQuery.Count();
+          var count = addressesQuery.Count(); //check the actual number of entries in the index
 
           if (count == 0)
           {
             return new List<IndexedAddress>();
           }
 
-          return addressesQuery.Take(count + 1).ToList();
+          return addressesQuery.Take(count).ToList(); //perform retrieval using Take to avoid issue 140773
+          #endregion
         }
       }
       catch (Exception ex)
